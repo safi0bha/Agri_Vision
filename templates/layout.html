@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" x-data="app()" x-init="init()">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}AgriVision{% endblock %}</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Meta -->
+  <meta name="description" content="AgriVision — AI crop yield & disease detection dashboard" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- Chart.js (needed by scripts) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Lottie (optional micro-animations) -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <!-- App & Dropzone definitions are provided in scripts.js.
+       scripts.js must be loaded BEFORE Alpine so x-data="app()" works. -->
+  <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+
+  <!-- Alpine.js (deferred so DOM is parsed first) -->
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <style>
+    /* small inline helper (kept minimal) */
+    .glass { background: rgba(255,255,255,0.75); backdrop-filter: blur(6px); }
+    .card-shadow { box-shadow: 0 6px 18px rgba(18, 52, 22, 0.08); }
+    .dropzone { border: 2px dashed rgba(34,197,94,0.35); }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-800">
+
+  <header class="w-full bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">A</div>
+        <div>
+          <div class="font-semibold">AgriVision</div>
+          <div class="text-xs text-gray-500">AI-powered farming assistant</div>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-4 text-sm">
+        <a href="{{ url_for('index') }}" class="px-3 py-2 rounded hover:bg-gray-100">Home</a>
+        <a href="{{ url_for('crop_yield') }}" class="px-3 py-2 rounded hover:bg-gray-100">Crop Yield</a>
+        <a href="{{ url_for('disease_detection') }}" class="px-3 py-2 rounded hover:bg-gray-100">Disease Detection</a>
+        <a href="{{ url_for('admin_dashboard') }}" class="px-3 py-2 rounded hover:bg-gray-100">Admin</a>
+        <a href="{{ url_for('login') }}" class="ml-4 px-4 py-2 bg-green-600 text-white rounded">Log in</a>
+      </nav>
+
+      <div class="md:hidden">
+        <button @click="mobileOpen = !mobileOpen" class="p-2 rounded bg-gray-100">☰</button>
+      </div>
+    </div>
+
+    <template x-if="mobileOpen">
+      <div class="md:hidden border-t">
+        <div class="px-4 py-3 flex flex-col gap-2">
+          <a @click="mobileOpen=false" href="{{ url_for('index') }}" class="text-left">Home</a>
+          <a @click="mobileOpen=false" href="{{ url_for('crop_yield') }}" class="text-left">Crop Yield</a>
+          <a @click="mobileOpen=false" href="{{ url_for('disease_detection') }}" class="text-left">Disease Detection</a>
+          <a @click="mobileOpen=false" href="{{ url_for('admin_dashboard') }}" class="text-left">Admin</a>
+          <a href="{{ url_for('login') }}" class="text-left text-green-600 font-semibold">Log in</a>
+        </div>
+      </div>
+    </template>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="mt-12 text-center text-sm text-gray-500 pb-12">© AgriVision 2025 — Built with ❤️</footer>
+</body>
+</html>

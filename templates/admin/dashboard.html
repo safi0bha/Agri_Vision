@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}Admin Dashboard — AgriVision{% endblock %}
+{% block content %}
+
+<div class="p-4 rounded bg-white card-shadow">
+  <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-semibold">Admin Dashboard</h2>
+    <div class="text-sm text-gray-500">Overview</div>
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="p-4 rounded bg-white card-shadow">
+      <div class="text-sm text-gray-500">Total Users</div>
+      <div class="text-2xl font-bold">1,042</div>
+    </div>
+    <div class="p-4 rounded bg-white card-shadow">
+      <div class="text-sm text-gray-500">Predictions</div>
+      <div class="text-2xl font-bold">2,345</div>
+    </div>
+    <div class="p-4 rounded bg-white card-shadow">
+      <div class="text-sm text-gray-500">Images analysed</div>
+      <div class="text-2xl font-bold">4,021</div>
+    </div>
+  </div>
+
+  <div class="mt-6 p-4 rounded bg-white card-shadow">
+    <canvas id="adminChart" height="100"></canvas>
+  </div>
+</div>
+
+{% endblock %}

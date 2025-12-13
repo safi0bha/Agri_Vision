@@ -1,0 +1,326 @@
+{% extends "layout.html" %}
+{% block title %}Disease Detection — AgriVision{% endblock %}
+{% block content %}
+
+<div class="p-6 bg-white rounded-lg shadow-md">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-800">Plant Disease Detection</h2>
+      <p class="text-sm text-gray-500 mt-1">Upload a clear leaf image — our AI model will analyze and classify it.</p>
+    </div>
+    <div class="text-sm text-gray-500 bg-green-100 px-3 py-1 rounded-full">Model: CNN (LeafNet)</div>
+  </div>
+
+  <!-- Flash Messages for non-AJAX submissions -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="mb-4 p-3 rounded {% if category == 'error' %}bg-red-100 text-red-700 border border-red-200{% else %}bg-green-100 text-green-700 border border-green-200{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Show results from server-side rendering -->
+  {% if prediction %}
+  <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+    <h4 class="font-semibold text-blue-800 text-lg">Detection Result</h4>
+    <div class="mt-3">
+      <div class="text-xl font-semibold text-gray-800">{{ prediction }}</div>
+      {% if confidence %}
+      <div class="mt-3">
+        <div class="text-sm text-gray-600 mb-1">Confidence: {{ "%.1f"|format(confidence) }}%</div>
+        <div class="w-full bg-gray-200 rounded-full overflow-hidden h-3">
+          <div class="h-3 rounded-full bg-green-600 transition-all duration-500" style="width: {{ confidence }}%"></div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% if image_url %}
+    <div class="mt-4 text-center">
+      <img src="{{ image_url }}" alt="Analyzed plant" class="max-h-64 rounded-lg shadow-md mx-auto">
+      <p class="text-sm text-gray-500 mt-2">Uploaded Image</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <form id="diseaseForm" action="{{ url_for('disease_detection') }}" method="post" enctype="multipart/form-data">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Upload Column -->
+      <div id="uploadArea" class="p-6 border-2 border-dashed border-gray-300 rounded-lg transition-all duration-200 hover:border-green-400">
+        <div id="uploadPlaceholder" class="text-center text-gray-500 py-8">
+          <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <p class="mb-2 text-lg">Drag & drop your leaf image here</p>
+          <p class="text-sm mb-4">Supported formats: PNG, JPG (max 16MB)</p>
+          <label for="fileInput" class="cursor-pointer px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">Browse Image</label>
+          <input type="file" id="fileInput" name="file" accept="image/png, image/jpeg, image/jpg" class="hidden" required>
+        </div>
+        <div id="imagePreview" class="hidden flex flex-col items-center">
+          <img id="previewImage" alt="Preview" class="max-h-80 rounded-lg shadow-md mt-2">
+          <div id="fileName" class="mt-3 text-sm text-gray-600 font-medium"></div>
+          <button type="button" id="removeImage" class="mt-2 text-sm text-red-600 hover:text-red-700 underline transition-colors">Remove Image</button>
+        </div>
+      </div>
+
+      <!-- AJAX Result Column -->
+      <div id="ajaxResult" class="p-6 bg-gray-50 rounded-lg border border-gray-200 hidden">
+        <h4 class="font-semibold text-gray-800 text-lg mb-4">Detection Result</h4>
+        <div id="diseaseResult" class="mt-4">
+          <div class="text-xl font-semibold text-gray-800" id="predictionText">No analysis yet</div>
+          <div class="text-sm text-gray-500 mt-2" id="resultMessage">Upload an image and click detect to see results</div>
+        </div>
+        <div id="confidenceRow" class="mt-4">
+          <div class="text-sm text-gray-600 mb-2">Confidence Level</div>
+          <div class="w-full bg-gray-200 rounded-full overflow-hidden h-3">
+            <div id="confidenceBar" class="h-3 rounded-full bg-green-600 transition-all duration-500" style="width:0%"></div>
+          </div>
+          <div class="text-xs text-gray-500 mt-1 text-right" id="confidenceText">0%</div>
+        </div>
+        <div id="resultImage" class="mt-4 text-center hidden">
+          <img id="analyzedImage" alt="Analyzed plant" class="max-h-64 rounded-lg shadow-md mx-auto">
+          <p class="text-sm text-gray-500 mt-2">Processed Image</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 flex gap-4 items-center">
+      <button type="submit" id="detectBtn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2" disabled>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        Detect Disease
+      </button>
+      <div id="diseaseSpinner" class="hidden items-center text-sm text-gray-600">
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Analyzing image...
+      </div>
+    </div>
+  </form>
+
+  <!-- Information Section -->
+  <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+      <h5 class="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        How to use:
+      </h5>
+      <ul class="text-sm text-gray-600 space-y-2">
+        <li class="flex items-start gap-2">
+          <span class="text-green-600 mt-1">•</span>
+          Take a clear, well-lit photo of the plant leaf
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-green-600 mt-1">•</span>
+          Ensure the leaf is in focus and fills most of the frame
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-green-600 mt-1">•</span>
+          Upload PNG, JPG, or JPEG format images
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-green-600 mt-1">•</span>
+          Click "Detect Disease" for AI analysis
+        </li>
+      </ul>
+    </div>
+    
+    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+      <h5 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        Supported Diseases:
+      </h5>
+      <div class="text-sm text-gray-600 space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+          <span>Healthy Plants</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+          <span>Powdery Mildew</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+          <span>Leaf Spot</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+          <span>Blight</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
+          <span>Rust</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const form = document.getElementById('diseaseForm');
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewImage = document.getElementById('previewImage');
+  const fileName = document.getElementById('fileName');
+  const removeImage = document.getElementById('removeImage');
+  const detectBtn = document.getElementById('detectBtn');
+  const spinner = document.getElementById('diseaseSpinner');
+  const ajaxResult = document.getElementById('ajaxResult');
+  const predictionText = document.getElementById('predictionText');
+  const resultMessage = document.getElementById('resultMessage');
+  const confidenceBar = document.getElementById('confidenceBar');
+  const confidenceText = document.getElementById('confidenceText');
+  const resultImage = document.getElementById('resultImage');
+  const analyzedImage = document.getElementById('analyzedImage');
+
+  if (!form) {
+    console.error('Form not found');
+    return;
+  }
+
+  // File input change handler
+  fileInput.addEventListener('change', function(e) {
+    handleFile(e.target.files[0]);
+  });
+
+  // Drag and drop handlers
+  uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('border-green-500', 'bg-green-50');
+  });
+
+  uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('border-green-500', 'bg-green-50');
+  });
+
+  uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('border-green-500', 'bg-green-50');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  // Remove image handler
+  removeImage.addEventListener('click', function() {
+    fileInput.value = '';
+    uploadPlaceholder.classList.remove('hidden');
+    imagePreview.classList.add('hidden');
+    detectBtn.disabled = true;
+    ajaxResult.classList.add('hidden');
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+    
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Unsupported file type. Please upload a PNG or JPG image.');
+      return;
+    }
+    
+    if (file.size > 16 * 1024 * 1024) {
+      alert('File too large. Max 16MB allowed.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewImage.src = e.target.result;
+      fileName.textContent = file.name;
+      uploadPlaceholder.classList.add('hidden');
+      imagePreview.classList.remove('hidden');
+      detectBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Form submission handler
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    if(!fileInput.files.length){
+      alert('Please upload an image first.');
+      return;
+    }
+
+    // Show loading state
+    spinner.classList.remove('hidden');
+    detectBtn.disabled = true;
+    ajaxResult.classList.remove('hidden');
+    predictionText.textContent = 'Analyzing image...';
+    resultMessage.textContent = 'Processing your image with AI model';
+    confidenceBar.style.width = '0%';
+    confidenceText.textContent = '0%';
+    resultImage.classList.add('hidden');
+
+    const formData = new FormData(form);
+
+    // Add header to indicate we want JSON response
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Hide spinner
+      spinner.classList.add('hidden');
+      detectBtn.disabled = false;
+
+      if (data.error) {
+        predictionText.textContent = 'Error';
+        resultMessage.textContent = data.error;
+        confidenceBar.style.width = '0%';
+        confidenceText.textContent = '0%';
+        return;
+      }
+
+      // Show results
+      predictionText.textContent = data.prediction || 'Unknown';
+      resultMessage.textContent = data.message || 'Analysis complete';
+      
+      // Update confidence bar
+      const confidence = (data.confidence || 0.85) * 100;
+      confidenceBar.style.width = confidence + '%';
+      confidenceText.textContent = confidence.toFixed(1) + '%';
+      
+      // Show image if available
+      if (data.image_url) {
+        analyzedImage.src = data.image_url;
+        resultImage.classList.remove('hidden');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      spinner.classList.add('hidden');
+      detectBtn.disabled = false;
+      predictionText.textContent = 'Error';
+      resultMessage.textContent = 'Failed to analyze image. Please try again.';
+      confidenceBar.style.width = '0%';
+      confidenceText.textContent = '0%';
+    });
+  });
+});
+</script>
+
+{% endblock %}
